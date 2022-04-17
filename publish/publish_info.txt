@@ -1,0 +1,8 @@
+App title               Brush
+Website                 https://github.com/david-s-svedberg/pebble-brush
+Source code URL         https://github.com/david-s-svedberg/pebble-brush
+Support email address   david.s.svedberg@gmail.com
+Category                Tools & Utilities
+
+Description:
+Toothbrush timer with some configurability

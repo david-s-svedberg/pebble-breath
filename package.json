@@ -1,0 +1,130 @@
+{
+    "author": "david.s.svedberg@gmail.com",
+    "keywords": [],
+    "name": "breath",
+    "pebble": {
+        "displayName": "Breath",
+        "projectType": "native",
+        "resources": {
+            "publishedMedia": [
+                {
+                  "name": "APP_GLANCE_ICON",
+                  "id": 1,
+                  "glance": "BREATH_ICON"
+                }
+            ],
+            "media": [
+                {
+                    "file": "images/config_black.png",
+                    "name": "CONFIG_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/config_white.png",
+                    "name": "CONFIG_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/breath.png",
+                    "name": "BREATH_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/play_white.png",
+                    "name": "PLAY_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/play_black.png",
+                    "name": "PLAY_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/pause_black.png",
+                    "name": "PAUSE_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/pause_white.png",
+                    "name": "PAUSE_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/swap_black.png",
+                    "name": "SWAP_BLACK_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/swap_white.png",
+                    "name": "SWAP_WHITE_ICON",
+                    "spaceOptimization": "memory",
+                    "targetPlatforms": [
+                        "diorite",
+                        "basalt",
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "diorite",
+            "aplite",
+            "basalt"
+        ],
+        "uuid": "368baf1a-4dbf-4daf-8c55-0560c4b982a8",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}
