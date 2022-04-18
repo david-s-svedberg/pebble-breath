@@ -5,9 +5,18 @@
 #include "icons.h"
 
 #define FPS (20)
+#define MAX_BREATH_CIRCLE_RADIUS (50)
+#define MIN_BREATH_CIRCLE_RADIUS (10)
 
 static const uint16_t refresh_interval_ms = 1000 / FPS;
-static GPoint m_main_layer_center;
+static GPoint m_circle_center;
+static GRect m_circle_empty_rect;
+static GRect m_circle_full_rect;
+static GRect m_main_layer_text_area;
+static GFont m_text_font;
+
+static const char* BREATH_IN_TEXT = "Breath In";
+static const char* BREATH_OUT_TEXT = "Breath Out";
 
 typedef enum {
     OrificeNONE,
@@ -102,13 +111,34 @@ static void debug_seed()
         .remaining_ms = 4000,
         .animation_ms = 0,
     };
+    Action hold_empty =
+    {
+        .type = HoldEmptyBreath,
+        .orifice = Mouth,
+        .original_ms = 4000,
+        .remaining_ms = 4000,
+        .animation_ms = 0,
+    };
+    Action hold_full =
+    {
+        .type = HoldFullBreath,
+        .orifice = Mouth,
+        .original_ms = 4000,
+        .remaining_ms = 4000,
+        .animation_ms = 0,
+    };
+
     insertArray(&m_actions, in);
     insertArray(&m_actions, out);
+    insertArray(&m_actions, hold_empty);
+    insertArray(&m_actions, in);
+    insertArray(&m_actions, hold_full);
 }
 
 static void on_sec_tick(struct tm *tick_time, TimeUnits units_changed)
 {
     m_current_action->remaining_ms -= 1000;
+    m_current_action->animation_ms = m_current_action->original_ms - m_current_action->remaining_ms;
     if(m_current_action->remaining_ms <= 0)
     {
         vibes_enqueue_custom_pattern(m_vibration_pattern);
@@ -223,7 +253,14 @@ void setup_layers(
     m_main_layer = main_layer;
 
     GRect bounds = layer_get_bounds(main_layer);
-    m_main_layer_center = GPoint((bounds.origin.x + bounds.size.w)/2, (bounds.origin.y + bounds.size.h)/2);
+    m_circle_center = GPoint((bounds.origin.x + bounds.size.w)/2 - 2, (bounds.origin.y + bounds.size.h)/2 - 10);
+    m_main_layer_text_area = GRect(bounds.origin.x, bounds.size.h - bounds.origin.y - 20 - 8, bounds.size.w, 20);
+    m_text_font = fonts_get_system_font(FONT_KEY_GOTHIC_18);
+
+    m_circle_empty_rect = GRect(m_circle_center.x - MIN_BREATH_CIRCLE_RADIUS, m_circle_center.y - MIN_BREATH_CIRCLE_RADIUS, MIN_BREATH_CIRCLE_RADIUS * 2, MIN_BREATH_CIRCLE_RADIUS * 2);
+    m_circle_full_rect = GRect(m_circle_center.x - MAX_BREATH_CIRCLE_RADIUS, m_circle_center.y - MAX_BREATH_CIRCLE_RADIUS, MAX_BREATH_CIRCLE_RADIUS * 2, MAX_BREATH_CIRCLE_RADIUS * 2);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "empty: x:%d y:%d, w:%d, h:%d", m_circle_empty_rect.origin.x, m_circle_empty_rect.origin.y, m_circle_empty_rect.size.w, m_circle_empty_rect.size.h);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "full: x:%d y:%d, w:%d, h:%d", m_circle_full_rect.origin.x, m_circle_full_rect.origin.y, m_circle_full_rect.size.w, m_circle_full_rect.size.h);
 
     m_action_bar = action_bar;
     m_status_bar = status_bar;
@@ -241,39 +278,55 @@ void update_main_window(Window *window)
     layer_mark_dirty(m_main_layer);
 }
 
-#define MAX_BREATH_CIRCLE_RADIOUS (50)
-#define MIN_BREATH_CIRCLE_RADIOUS (10)
-
 void update_main_layer(struct Layer *layer, GContext *ctx)
 {
-    if(m_current_action != NULL && m_running)
+    if(m_current_action != NULL)
     {
-        float doneRatio = (float)(m_current_action->original_ms - m_current_action->animation_ms) / ((float)m_current_action->original_ms);
-        m_current_action->animation_ms += refresh_interval_ms;
+        float progress_procentage = 1 - (float)(m_current_action->original_ms - m_current_action->animation_ms) / ((float)m_current_action->original_ms);
+        graphics_context_set_fill_color(ctx, get_foreground_color());
+        graphics_context_set_text_color(ctx, get_foreground_color());
+        if(m_running)
+        {
+            m_current_action->animation_ms += refresh_interval_ms;
+        }
         switch (m_current_action->type)
         {
             case BreatheIn:
             {
-                uint8_t radius = ((MAX_BREATH_CIRCLE_RADIOUS - MIN_BREATH_CIRCLE_RADIOUS) * doneRatio) + MIN_BREATH_CIRCLE_RADIOUS;
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "radius: %d, doneRatio: %d", radius, (int)(doneRatio * 100));
-                graphics_context_set_fill_color(ctx, get_foreground_color());
-                graphics_fill_circle(ctx, m_main_layer_center, radius);
+                uint8_t radius = ((MAX_BREATH_CIRCLE_RADIUS - MIN_BREATH_CIRCLE_RADIUS) * progress_procentage) + MIN_BREATH_CIRCLE_RADIUS;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "radius: %d, progress_procentage: %d", radius, (int)(progress_procentage * 100));
+                graphics_fill_circle(ctx, m_circle_center, radius);
+                if(m_running)
+                {
+                    graphics_draw_text(ctx, BREATH_IN_TEXT, m_text_font, m_main_layer_text_area, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+                }
                 break;
             }
             case BreatheOut:
             {
-                uint8_t radius = ((MAX_BREATH_CIRCLE_RADIOUS - MIN_BREATH_CIRCLE_RADIOUS) * (1 - doneRatio)) + MIN_BREATH_CIRCLE_RADIOUS;
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "radius: %d, doneRatio: %d", radius, (int)(doneRatio * 100));
-                graphics_context_set_fill_color(ctx, get_foreground_color());
-                graphics_fill_circle(ctx, m_main_layer_center, radius);
+                uint8_t radius = ((MAX_BREATH_CIRCLE_RADIUS - MIN_BREATH_CIRCLE_RADIUS) * (1 - progress_procentage)) + MIN_BREATH_CIRCLE_RADIUS;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "radius: %d, progress_procentage: %d", radius, (int)(progress_procentage * 100));
+                graphics_fill_circle(ctx, m_circle_center, radius);
+                if(m_running)
+                {
+                    graphics_draw_text(ctx, BREATH_OUT_TEXT, m_text_font, m_main_layer_text_area, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+                }
                 break;
             }
             case HoldEmptyBreath:
             {
+                int32_t start_angle = progress_procentage * 360;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "start_angle: %d", (int)start_angle);
+                graphics_fill_radial(ctx, m_circle_empty_rect, GOvalScaleModeFillCircle, MIN_BREATH_CIRCLE_RADIUS, DEG_TO_TRIGANGLE(start_angle), DEG_TO_TRIGANGLE(360));
+                graphics_draw_text(ctx, "Hold Empty Breath", m_text_font, m_main_layer_text_area, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
                 break;
             }
             case HoldFullBreath:
             {
+                int32_t start_angle = progress_procentage * 360;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "start_angle: %d", (int)start_angle);
+                graphics_fill_radial(ctx, m_circle_full_rect, GOvalScaleModeFillCircle, MAX_BREATH_CIRCLE_RADIUS, DEG_TO_TRIGANGLE(start_angle), DEG_TO_TRIGANGLE(360));
+                graphics_draw_text(ctx, "Hold Full Breath", m_text_font, m_main_layer_text_area, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
                 break;
             }
             default:
